@@ -37,6 +37,7 @@ public class AuthController {
 	//회원가입
 	@PostMapping("/signup")
 	public Map<String, String> signup(@RequestBody Map<String, String> body) {
+		System.out.println("회원가입요청!!");
 		String username = body.get("username");
 		String password = passwordEncoder.encode(body.get("password")); //평문->암호화
 		User user = new User();
@@ -59,7 +60,7 @@ public class AuthController {
 	
 	@GetMapping("/me")
 	public Map<String, String> me(@RequestHeader("Authorization") String authHeader) {
-		
+		System.out.println("로그인 사용자 정보 요청");
 		String token = authHeader.replace("Bearer ", ""); //헤더에서 토큰 정보만 추출 
 		String username = jwtUtil.extractUsername(token);
 		
