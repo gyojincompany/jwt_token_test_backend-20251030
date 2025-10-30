@@ -5,19 +5,23 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.core.userdetails.UserDetailsService;
+//import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 
-import com.gyojincompany.home.repository.UserRepository;
-
-import jakarta.servlet.http.HttpServletResponse;
+import com.gyojincompany.home.jwt.JwtAuthenticationFilter;
 
 @Configuration
 public class SecurityConfig {
+	
+	@Autowired
+	private JwtAuthenticationFilter authenticationFilter;
 	
 	@Bean
 	public PasswordEncoder passwordEncoder() {
@@ -32,19 +36,8 @@ public class SecurityConfig {
 					.requestMatchers("/api/auth/**").permitAll() //인증 없이 접근 가능한 요청들
 					.anyRequest().authenticated() //위 요청을 제외한 나머지 요청들은 전부 인증 필요
 					)
-					//로그인 처리 파트 설정
-					.formLogin(form -> form
-							.loginProcessingUrl("/api/auth/login") //로그인을 처리하는 요청
-							.defaultSuccessUrl("/api/auth/apicheck", true) //로그인 성공 시 이동할 url
-							.failureHandler((req, res, ex) -> res.setStatus(HttpServletResponse.SC_UNAUTHORIZED))
-							//로그인 실패했을 때 401 전송
-							.permitAll()
-							)
-					//로그아웃 처리 파트 설정
-					.logout(logout -> logout
-							.logoutUrl("/api/auth/logout")
-							.permitAll()							
-							)
+					.addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+					//로그인하지 않고도 JWT 존재하면 요청을 받게 하는 설정
 					.cors(cors -> cors.configurationSource(request -> {
 						CorsConfiguration config = new CorsConfiguration();
 						config.setAllowCredentials(true);
@@ -54,10 +47,15 @@ public class SecurityConfig {
 						config.setAllowedMethods(List.of("GET","POST","PUT","DELETE"));
 						config.setAllowedHeaders(List.of("*"));
 						return config;
-					}));
-					
-		return http.build();
-			
+					})	
+				);					
+			return http.build();			
 	}
-
+	
+	@Bean
+	public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+		return config.getAuthenticationManager();
+		//사용자 인증을 처리하는 객체 반환
+	}
+	
 }
