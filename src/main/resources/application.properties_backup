@@ -15,3 +15,4 @@ spring.jpa.properties.hibernate.format_sql=true
 jwt.secret=myScretKey0000fdafadsdfdsafdasffsafsafasfdfdfsdafafs
 jwt.expiration=180000
 # 30분 밀리세컨드초
+
